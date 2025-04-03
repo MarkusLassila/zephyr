@@ -36,7 +36,7 @@ K_SEM_DEFINE(receive_ready_sem, 0, 1);
 /*************************************************************************************************/
 /*                                          Buffers                                              */
 /*************************************************************************************************/
-static uint8_t backend_receive_buffer[4096];
+static uint8_t backend_receive_buffer[512];
 static uint8_t backend_transmit_buffer[4096];
 RING_BUF_DECLARE(transmit_ring_buf, 4096);
 static uint8_t receive_buffer[4096];
@@ -134,6 +134,7 @@ static int receive_prng(void)
 	int ret = 0;
 
 	if (k_sem_take(&receive_ready_sem, K_NO_WAIT) == 0) {
+		k_sleep(K_MSEC(100));
 		ret = modem_pipe_receive(pipe, receive_buffer, sizeof(receive_buffer));
 		if (ret < 0) {
 			return -EFAULT;
@@ -157,7 +158,7 @@ static void *test_modem_backend_uart_setup(void)
 	const struct modem_backend_uart_config config = {
 		.uart = uart,
 		.receive_buf = backend_receive_buffer,
-		.receive_buf_size = 1024,
+		.receive_buf_size = sizeof(backend_receive_buffer),
 		.transmit_buf = backend_transmit_buffer,
 		.transmit_buf_size = 1024,
 	};
